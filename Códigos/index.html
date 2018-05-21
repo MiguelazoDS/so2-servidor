@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+
+    <meta charset="utf-8">
+    <title>SOII - TP3</title>
+  </head>
+  <body>
+    <h1>Sistemas Operativos II - Base de Datos</h1><br>
+
+    <h2>Estaciones hidro-meteorológicas</h2>
+
+    <h3>Opciones:</h3>
+
+    <form action="pc_info.pl" method="GET" target="_blank">
+      <input type="submit" value="Información acerca del hardware del servidor">
+    </form><br>
+
+    <form action="download.pl" method="GET" target="_blank">
+      Descargar estación nº: <input type="text" name="estacion">
+      <input type="submit" value="Enviar">
+    </form><br>
+
+    <form action="listar_módulos.pl" method="GET" target="_blank">
+      <input type="submit" value="Listar módulos">
+    </form><br>
+
+    <form action="upload.pl" method="GET" target="_blank">
+      <input type="submit" value="Subir módulo">
+    </form><br>
+
+    <form action="load_module.pl" method="GET" target="_blank">
+      <input type="submit" value="Instalar módulo">
+    </form><br>
+
+    <form action="unload_module.pl" method="GET" target="_blank">
+      <input type="submit" value="Remover módulo">
+    </form><br>
+  </body>
+</html>
