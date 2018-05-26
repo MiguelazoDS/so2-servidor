@@ -1,5 +1,5 @@
 /***************************************************************************//**
-@file         main.c
+@file         Bash.h
 @author       Stephen Brennan
 @date         Thursday,  8 January 2015
 @brief        LSH (Libstephen SHell)
@@ -18,7 +18,7 @@
    @param argv Argument vector.
    @return status code
  */
-int main(int argc, char **argv)
+int bash(int argc, char **argv)
 {
   /* Load config files, if any.*/
 
