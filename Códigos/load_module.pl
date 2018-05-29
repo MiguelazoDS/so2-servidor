@@ -8,7 +8,7 @@ print 	$q->header( -charset=>'utf-8'),
                         -style=>{-src=>'style.css'}),
      	  $q->end_html;
 
-$instalar=system("sudo insmod /tmp/hello_world.ko");
+$instalar=system("sudo /usr/bin/insmod /tmp/hello_world.ko");
 $info=`dmesg | tail -n 1`;
 if($instalar==0){
 print $q->h2($info);
