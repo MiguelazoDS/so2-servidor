@@ -31,340 +31,297 @@ int nbytes;
  /*
    List of builtin commands, followed by their corresponding functions.
   */
- char *builtin_str[] = {
-   "cd",
-   "help",
-   "exit"
- };
+char *builtin_str[] = {
+  "cd",
+  "help",
+  "exit"
+};
 
- int lsh_num_builtins() {
-   return sizeof(builtin_str) / sizeof(char *);
- }
+int lsh_num_builtins() {
+  return sizeof(builtin_str) / sizeof(char *);
+}
 
  /**
     @brief Bultin command: change directory.
     @param args List of args.  args[0] is "cd".  args[1] is the directory.
     @return Always returns 1, to continue executing.
   */
- int lsh_cd(char **args)
- {
-   if (args[1] == NULL) {
-     fprintf(stderr, "lsh: expected argument to \"cd\"\n");
-   } else {
-     if (chdir(args[1]) != 0) {
-       perror("lsh");
-     }
+int lsh_cd(char **args){
+  if (args[1] == NULL) {
+   fprintf(stderr, "lsh: expected argument to \"cd\"\n");
+  } else {
+   if (chdir(args[1]) != 0) {
+     perror("lsh");
    }
-   return 1;
- }
+  }
+  return 1;
+}
 
  /**
     @brief Builtin command: print help.
     @param args List of args.  Not examined.
     @return Always returns 1, to continue executing.
   */
- int lsh_help(char **args)
- {
-   int i;
-   printf("Stephen Brennan's LSH\n");
-   printf("Type program names and arguments, and hit enter.\n");
-   printf("The following are built in:\n");
+int lsh_help(char **args){
+  int i;
+  printf("Stephen Brennan's LSH\n");
+  printf("Type program names and arguments, and hit enter.\n");
+  printf("The following are built in:\n");
 
-   for (i = 0; i < lsh_num_builtins(); i++) {
-     printf("  %s\n", builtin_str[i]);
-   }
+  for (i = 0; i < lsh_num_builtins(); i++) {
+   printf("  %s\n", builtin_str[i]);
+  }
 
-   printf("Use the man command for information on other programs.\n");
-   return 1;
- }
+  printf("Use the man command for information on other programs.\n");
+  return 1;
+}
 
  /**
     @brief Builtin command: exit.
     @param args List of args.  Not examined.
     @return Always returns 0, to terminate execution.
   */
- int lsh_exit(char **args)
- {
+int lsh_exit(char **args){
    return 0;
- }
+}
 
- int (*builtin_func[]) (char **) = {
-   &lsh_cd,
-   &lsh_help,
-   &lsh_exit
- };
+int (*builtin_func[]) (char **) = {
+  &lsh_cd,
+  &lsh_help,
+  &lsh_exit
+};
  /**
    @brief Launch a program and wait for it to terminate.
    @param args Null terminated list of arguments (including program).
    @return Always returns 1, to continue execution.
   */
- int lsh_launch(char **args)
- {
-   pid_t pid;/*, wpid;*/
-   int link[2];
+int lsh_launch(char **args){
+  pid_t pid;/*, wpid;*/
+  int link[2];
 
-   if (pipe(link)==-1)
-     die("pipe");
+  if (pipe(link)==-1)
+   die("pipe");
 
-   if ((pid = fork()) == -1)
-     die("fork");
+  if ((pid = fork()) == -1)
+   die("fork");
 
-   if (pid == 0) {
-     dup2(link[1],STDOUT_FILENO);
-     close(link[0]);
-     close(link[1]);
-     execvp(args[0], args);
-     die("execl");
-   }
-   else {
-     close(link[1]);
-     nbytes=read(link[0],output, sizeof(output));
-     wait(NULL);
-   }
+  if (pid == 0) {
+   dup2(link[1],STDOUT_FILENO);
+   close(link[0]);
+   close(link[1]);
+   execvp(args[0], args);
+   die("execl");
+  }
+  else {
+   close(link[1]);
+   nbytes=read(link[0],output, sizeof(output));
+   wait(NULL);
+  }
 
-   return 1;
- }
+  return 1;
+}
 
  /**
     @brief Execute shell built-in or launch program.
     @param args Null terminated list of arguments.
     @return 1 if the shell should continue running, 0 if it should terminate
   */
- int lsh_execute(char **args)
- {
-   int i;
+int lsh_execute(char **args){
+  int i;
 
-   if (args[0] == NULL) {
-     /* An empty command was entered.*/
-     return 1;
+  if (args[0] == NULL) {
+   /* An empty command was entered.*/
+   return 1;
+  }
+
+  for (i = 0; i < lsh_num_builtins(); i++) {
+   if (strcmp(args[0], builtin_str[i]) == 0) {
+     return (*builtin_func[i])(args);
    }
+  }
 
-   for (i = 0; i < lsh_num_builtins(); i++) {
-     if (strcmp(args[0], builtin_str[i]) == 0) {
-       return (*builtin_func[i])(args);
-     }
-   }
-
-   return lsh_launch(args);
- }
+  return lsh_launch(args);
+}
 
  /**
     @brief Read a line of input from stdin.
     @return The line from stdin.
   */
- char *lsh_read_line(void)
- {
-   int bufsize = LSH_RL_BUFSIZE;
-   int position = 0;
-   char *buffer = malloc(sizeof(char) * bufsize);
-   int c;
+char *lsh_read_line(void){
+  int bufsize = LSH_RL_BUFSIZE;
+  int position = 0;
+  char *buffer = malloc(sizeof(char) * bufsize);
+  int c;
 
-   if (!buffer) {
-     fprintf(stderr, "lsh: allocation error\n");
-     exit(EXIT_FAILURE);
+  if (!buffer) {
+   fprintf(stderr, "lsh: allocation error\n");
+   exit(EXIT_FAILURE);
+  }
+
+  while (1) {
+   /*Read a character*/
+   c = getchar();
+
+   /* If we hit EOF, replace it with a null character and return.*/
+   if (c == EOF || c == '\n') {
+     buffer[position] = '\0';
+     return buffer;
+   } else {
+     buffer[position] = c;
    }
+   position++;
 
-   while (1) {
-     /*Read a character*/
-     c = getchar();
-
-     /* If we hit EOF, replace it with a null character and return.*/
-     if (c == EOF || c == '\n') {
-       buffer[position] = '\0';
-       return buffer;
-     } else {
-       buffer[position] = c;
-     }
-     position++;
-
-     /* If we have exceeded the buffer, reallocate.*/
-     if (position >= bufsize) {
-       bufsize += LSH_RL_BUFSIZE;
-       buffer = realloc(buffer, bufsize);
-       if (!buffer) {
-         fprintf(stderr, "lsh: allocation error\n");
-         exit(EXIT_FAILURE);
-       }
+   /* If we have exceeded the buffer, reallocate.*/
+   if (position >= bufsize) {
+     bufsize += LSH_RL_BUFSIZE;
+     buffer = realloc(buffer, bufsize);
+     if (!buffer) {
+       fprintf(stderr, "lsh: allocation error\n");
+       exit(EXIT_FAILURE);
      }
    }
- }
+  }
+}
 
  /**
     @brief Split a line into tokens (very naively).
     @param line The line.
     @return Null-terminated array of tokens.
   */
- char **lsh_split_line(char *line)
- {
-   int bufsize = LSH_TOK_BUFSIZE, position = 0;
-   char **tokens = malloc(bufsize * sizeof(char*));
-   char *token;
+char **lsh_split_line(char *line){
+  int bufsize = LSH_TOK_BUFSIZE, position = 0;
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token;
 
-   if (!tokens) {
-     fprintf(stderr, "lsh: allocation error\n");
-     exit(EXIT_FAILURE);
-   }
+  if (!tokens) {
+   fprintf(stderr, "lsh: allocation error\n");
+   exit(EXIT_FAILURE);
+  }
 
-   token = strtok(line, LSH_TOK_DELIM);
-   while (token != NULL) {
-     tokens[position] = token;
-     position++;
+  token = strtok(line, LSH_TOK_DELIM);
+  while (token != NULL) {
+   tokens[position] = token;
+   position++;
 
-     if (position >= bufsize) {
-       bufsize += LSH_TOK_BUFSIZE;
-       tokens = realloc(tokens, bufsize * sizeof(char*));
-       if (!tokens) {
-         fprintf(stderr, "lsh: allocation error\n");
-         exit(EXIT_FAILURE);
-       }
+   if (position >= bufsize) {
+     bufsize += LSH_TOK_BUFSIZE;
+     tokens = realloc(tokens, bufsize * sizeof(char*));
+     if (!tokens) {
+       fprintf(stderr, "lsh: allocation error\n");
+       exit(EXIT_FAILURE);
      }
-
-     token = strtok(NULL, LSH_TOK_DELIM);
    }
-   tokens[position] = NULL;
-   return tokens;
+
+   token = strtok(NULL, LSH_TOK_DELIM);
+  }
+  tokens[position] = NULL;
+  return tokens;
+}
+
+void imprimirHOSTNAME(){
+  FILE *f1;
+  char buffer1[BUFFSIZE+1];
+  f1=fopen("/proc/sys/kernel/hostname","r");
+  fgets(buffer1, BUFFSIZE+1, f1);
+  buffer1[strlen(buffer1)-1] = '\0';
+  printf("%s",buffer1);
+  fclose(f1);
  }
 
- void imprimirHOSTNAME(){
- 		FILE *f1;
- 		char buffer1[BUFFSIZE+1];
- 		f1=fopen("/proc/sys/kernel/hostname","r");
- 		fgets(buffer1, BUFFSIZE+1, f1);
-     buffer1[strlen(buffer1)-1] = '\0';
- 		printf("%s",buffer1);
- 		fclose(f1);
- }
+void imprimirFECHAYHORA(){
+  FILE *f;
+  char buffer[BUFFSIZE+1];
+  int hora, min, seg, ano, mes, dia;
+  f=fopen("/proc/driver/rtc","r");
+  fgets(buffer, BUFFSIZE+1, f);
+  sscanf(buffer, "%*s       %*c %d%*c%d%*c%d",&hora,&min,&seg);
+  fgets(buffer, BUFFSIZE+1, f);
+  sscanf(buffer, "%*s       %*c %d%*c%d%*c%d",&ano,&mes,&dia);
 
- void imprimirFECHAYHORA(){
- 		FILE *f;
- 		char buffer[BUFFSIZE+1];
- 		int hora, min, seg, ano, mes, dia;
- 		f=fopen("/proc/driver/rtc","r");
- 		fgets(buffer, BUFFSIZE+1, f);
- 		sscanf(buffer, "%*s       %*c %d%*c%d%*c%d",&hora,&min,&seg);
- 		fgets(buffer, BUFFSIZE+1, f);
- 		sscanf(buffer, "%*s       %*c %d%*c%d%*c%d",&ano,&mes,&dia);
+  printf("              Hora: %d:%d:%d", hora, min, seg);
+  printf("              Fecha: %d/%d/%d\n", dia, mes, ano);
 
- 		printf("              Hora: %d:%d:%d", hora, min, seg);
- 		printf("              Fecha: %d/%d/%d\n", dia, mes, ano);
+  fclose(f);
+}
 
- 		fclose(f);
- }
+void imprimirCPU(){
+  FILE *f;
+  char buffer[BUFFSIZE+1];
+  printf("\n          >Procesador: \n");
+  f = fopen("/proc/cpuinfo","r");
+  fgets(buffer, BUFFSIZE+1, f);
+  fgets(buffer, BUFFSIZE+1, f);
+  fgets(buffer, BUFFSIZE+1, f);
+  fgets(buffer, BUFFSIZE+1, f);
+  fgets(buffer, BUFFSIZE+1, f);
+  printf("              %s",buffer);
+  fclose(f);
+}
 
- void imprimirCPU(){
- 		FILE *f;
- 		char buffer[BUFFSIZE+1];
-     printf("\n          >Procesador: \n");
- 		f = fopen("/proc/cpuinfo","r");
- 		fgets(buffer, BUFFSIZE+1, f);
- 		fgets(buffer, BUFFSIZE+1, f);
- 		fgets(buffer, BUFFSIZE+1, f);
- 		fgets(buffer, BUFFSIZE+1, f);
- 		fgets(buffer, BUFFSIZE+1, f);
- 		printf("              %s",buffer);
- 		fclose(f);
- }
+void imprimirUptime(){
+  FILE *f;
+  char buffer[BUFFSIZE+1];
+  int a=1;
+  int i=0;
+  int cantidad=0;
+  double punto=0;
+  double aux=0;
+  int horas;
+  int minutos;
+  double segundos;
+  f = fopen("/proc/uptime","r");
+  fgets(buffer, BUFFSIZE+1, f);
+  while(a==1)
+  {
+  if(buffer[i]==46)
+  	punto=i;
 
- void imprimirUptime(){
- 		FILE *f;
- 		char buffer[BUFFSIZE+1];
- 		int a=1;
- 		int i=0;
- 		int cantidad=0;
- 		double punto=0;
-     double aux=0;
-     int horas;
-     int minutos;
-     double segundos;
-     f = fopen("/proc/uptime","r");
-     fgets(buffer, BUFFSIZE+1, f);
- 		while(a==1)
- 		{
- 		if(buffer[i]==46)
- 			punto=i;
+  else if(buffer[i]==32)
+  	{
+  		cantidad=i;
+  		a=-1;
+  	}
+  	i++;
+  }
+  i=0;
+  aux=0;
 
- 		else if(buffer[i]==32)
- 			{
- 				cantidad=i;
- 				a=-1;
- 			}
- 			i++;
- 		}
- 		i=0;
- 		aux=0;
+  while(i<cantidad)
+  {
+  	if(buffer[i]!=46 && punto>0)
+  		aux+=(buffer[i]-48)*pow(10.0,punto-1);
+  	if(buffer[i]!=46 && punto<0)
+  		aux+=(buffer[i]-48)*pow(10.0,punto);
+  	punto--;
+  	i++;
+  }
+  horas=aux/3600;
+  minutos=(aux-horas*3600)/60;
+  segundos=(aux-horas*3600-minutos*60);
 
- 		while(i<cantidad)
- 		{
- 			if(buffer[i]!=46 && punto>0)
- 				aux+=(buffer[i]-48)*pow(10.0,punto-1);
- 			if(buffer[i]!=46 && punto<0)
- 				aux+=(buffer[i]-48)*pow(10.0,punto);
- 			punto--;
- 			i++;
- 		}
- 		horas=aux/3600;
- 		minutos=(aux-horas*3600)/60;
- 		segundos=(aux-horas*3600-minutos*60);
+  printf("          Uptime-HH/MM/SS-: %d:%d:%.2f\n",horas, minutos, segundos);
+  fclose(f);
+}
 
- 		printf("          Uptime-HH/MM/SS-: %d:%d:%.2f\n",horas, minutos, segundos);
- 		fclose(f);
- }
+void imprimirEncabezado(){
+   printf("\n          +-------------------Inicio del programa Bash--------------------------+\n");
+   printf("\n          >Fecha y Hora actual: \n");
+ 	 imprimirFECHAYHORA();
+   printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n");
+   printf("\n          >Uptime: ");
+   imprimirUptime();
+   printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n");
+   imprimirCPU();
+   printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n\n\n");
+}
 
- void imprimirEncabezado(){
-     printf("\n          +-------------------Inicio del programa Bash--------------------------+\n");
- 		printf("\n          >Fecha y Hora actual: \n");
- 		imprimirFECHAYHORA();
-     printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n");
-     printf("\n          >Uptime: ");
-     imprimirUptime();
-     printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n");
-     imprimirCPU();
-     printf("\n          +- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -+\n\n\n");
- }
-
- /**
-    @brief Loop getting input and executing it.
-  */
- void lsh_loop(void)
- {
-   char *line;
-   char **args;
-   int status;
-   char buffer[directorio_actual];
-   FILE *file;
-
-   imprimirEncabezado();
-setvbuf(stdout, NULL, _IONBF, 0);
-   do {
-     getcwd(buffer, directorio_actual);
-     imprimirHOSTNAME();
-     printf("~%s => ",buffer);
-     line = lsh_read_line();
-     printf("line: %s\n", line);
-     args = lsh_split_line(line);
-     printf("args1: %s, args2: %s\n", args[0], args[1]);
-     status = lsh_execute(args);
-
-     free(line);
-     free(args);
-     file=fopen("output","w");
-     fprintf(file, "%s\n", output);
-     fclose(file);
-   } while (status);
- }
-
-int main(int argc, char **argv)
-{
-  /* Load config files, if any.*/
-
-  /* Run command loop.*/
-  /*lsh_loop();*/
-
+int main(int argc, char **argv){
   char *line;
   char **args;
   int status;
   char buffer[directorio_actual];
   FILE *file;
+
   imprimirEncabezado();
   do {
     getcwd(buffer, directorio_actual);
@@ -382,8 +339,6 @@ int main(int argc, char **argv)
     fprintf(file, "%s\n", output);
     fclose(file);
   } while (status);
-
-  /*Perform any shutdown/cleanup.*/
 
   return EXIT_SUCCESS;
 }
