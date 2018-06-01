@@ -340,7 +340,9 @@ setvbuf(stdout, NULL, _IONBF, 0);
      imprimirHOSTNAME();
      printf("~%s => ",buffer);
      line = lsh_read_line();
+     printf("line: %s\n", line);
      args = lsh_split_line(line);
+     printf("args1: %s, args2: %s\n", args[0], args[1]);
      status = lsh_execute(args);
 
      free(line);
@@ -356,7 +358,31 @@ int main(int argc, char **argv)
   /* Load config files, if any.*/
 
   /* Run command loop.*/
-  lsh_loop();
+  /*lsh_loop();*/
+
+  char *line;
+  char **args;
+  int status;
+  char buffer[directorio_actual];
+  FILE *file;
+  imprimirEncabezado();
+  do {
+    getcwd(buffer, directorio_actual);
+    imprimirHOSTNAME();
+    printf("~%s => ",buffer);
+    line = lsh_read_line();
+    printf("line: %s\n", line);
+    args = lsh_split_line(line);
+    printf("args1: %s, args2: %s\n", args[0], args[1]);
+    status = lsh_execute(args);
+
+    free(line);
+    free(args);
+    file=fopen("output","w");
+    fprintf(file, "%s\n", output);
+    fclose(file);
+  } while (status);
+
   /*Perform any shutdown/cleanup.*/
 
   return EXIT_SUCCESS;
