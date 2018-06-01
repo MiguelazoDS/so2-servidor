@@ -11,11 +11,15 @@
 #include <string.h>
 #include <math.h>
 
+#define die(e) do { fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 #define LSH_RL_BUFSIZE 1024
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
 #define directorio_actual 500
 #define BUFFSIZE 256
+
+char output[BUFFSIZE];
+int nbytes;
 
 /**
    @brief Main entry point.
@@ -97,23 +101,25 @@
  int lsh_launch(char **args)
  {
    pid_t pid;/*, wpid;*/
-   int status;
+   int link[2];
 
-   pid = fork();
+   if (pipe(link)==-1)
+     die("pipe");
+
+   if ((pid = fork()) == -1)
+     die("fork");
+
    if (pid == 0) {
-     /* Child process*/
-     if (execvp(args[0], args) == -1) {
-       perror("lsh");
-     }
-     exit(EXIT_FAILURE);
-   } else if (pid < 0) {
-     /* Error forking*/
-     perror("lsh");
-   } else {
-     /* Parent process*/
-     do {
-       /*wpid = waitpid(pid, &status, WUNTRACED);*/
-     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+     dup2(link[1],STDOUT_FILENO);
+     close(link[0]);
+     close(link[1]);
+     execvp(args[0], args);
+     die("execl");
+   }
+   else {
+     close(link[1]);
+     nbytes=read(link[0],output, sizeof(output));
+     wait(NULL);
    }
 
    return 1;
@@ -325,7 +331,10 @@
    char **args;
    int status;
    char buffer[directorio_actual];
+   FILE *file;
+
    imprimirEncabezado();
+setvbuf(stdout, NULL, _IONBF, 0);
    do {
      getcwd(buffer, directorio_actual);
      imprimirHOSTNAME();
@@ -336,6 +345,8 @@
 
      free(line);
      free(args);
+     file=fopen("output","w");
+     fprintf(file, "%s\n", output);
    } while (status);
  }
 
@@ -345,7 +356,6 @@ int main(int argc, char **argv)
 
   /* Run command loop.*/
   lsh_loop();
-
   /*Perform any shutdown/cleanup.*/
 
   return EXIT_SUCCESS;
