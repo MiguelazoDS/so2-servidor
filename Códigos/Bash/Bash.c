@@ -347,6 +347,7 @@ setvbuf(stdout, NULL, _IONBF, 0);
      free(args);
      file=fopen("output","w");
      fprintf(file, "%s\n", output);
+     fclose(file);
    } while (status);
  }
 
