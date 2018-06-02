@@ -14,7 +14,9 @@ if($buffer =~ /\w=(.+)/){
 }
 
 $ind = index $buffer, "+";
-substr $buffer, $ind, 1, " ";
+if($ind != -1){
+  substr $buffer, $ind, 1, " ";
+}
 
 system("Bash/Bash $buffer");
 
