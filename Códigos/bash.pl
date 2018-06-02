@@ -13,6 +13,9 @@ if($buffer =~ /\w=(.+)/){
   $buffer=$1;
 }
 
+$ind = index $buffer, "+";
+substr $buffer, $ind, 1, " ";
+
 system("Bash/Bash $buffer");
 
 sub get_info{
