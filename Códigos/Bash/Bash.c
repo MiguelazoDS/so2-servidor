@@ -118,7 +118,7 @@ int lsh_launch(char **args){
    wait(NULL);
   }
 
-  return 1;
+  return 0;
 }
 
  /**
@@ -131,7 +131,7 @@ int lsh_execute(char **args){
 
   if (args[0] == NULL) {
    /* An empty command was entered.*/
-   return 1;
+   return 0;
   }
 
   for (i = 0; i < lsh_num_builtins(); i++) {
@@ -318,7 +318,7 @@ void imprimirEncabezado(){
 int main(int argc, char **argv){
   char *line;
   char **args;
-  int status;
+  int status, i;
   char buffer[directorio_actual];
   FILE *file;
 
@@ -327,14 +327,19 @@ int main(int argc, char **argv){
     getcwd(buffer, directorio_actual);
     imprimirHOSTNAME();
     printf("~%s => ",buffer);
-    line = lsh_read_line();
-    printf("line: %s\n", line);
-    args = lsh_split_line(line);
-    printf("args1: %s, args2: %s\n", args[0], args[1]);
-    status = lsh_execute(args);
+    /*line = lsh_read_line();
+    printf("line: %s\n", line);*/
+    /*args = lsh_split_line(line);*/
+    for(i=0; i<argc; i++){
+      argv[i]=argv[i+1];
+    }
+    /*printf("args1: %s, args2: %s\n", args[0], args[1]);*/
+    printf("argv1: %s, argv2: %s\n", argv[0], argv[1]);
+    printf("long argv: %d", argc);
+    status = lsh_execute(argv);
 
-    free(line);
-    free(args);
+    /*free(line);
+    free(args);*/
     file=fopen("output","w");
     fprintf(file, "%s\n", output);
     fclose(file);
