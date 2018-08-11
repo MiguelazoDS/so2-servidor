@@ -36,6 +36,11 @@ while($i > 0){
   $i--;
 }
 
+@dirs = `ls */ -d` =~ /(.+)\//g;
+print @dirs;
+@dir = $buffer =~ /(cd)\s(.+)\//;
+print $dir[0], $dir[1];
+
 system("Bash/Bash $buffer");
 
 sub get_info{
