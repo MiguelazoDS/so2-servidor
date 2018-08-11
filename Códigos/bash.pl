@@ -13,14 +13,27 @@ if($buffer =~ /\w=(.+)/){
   $buffer=$1;
 }
 
-$ind = index $buffer, "+";
-if($ind != -1){
-  substr $buffer, $ind, 1, " ";
+@c = ($buffer =~ /\+/g);
+$i = scalar @c;
+
+while($i > 0){
+  $ind = index $buffer, "+";
+  if($ind != -1){
+    substr $buffer, $ind, 1, " ";
+  }
+  $i--;
 }
 
-$ind = index $buffer, "%2F";
-if($ind != -1){
-  substr $buffer, $ind, 3, "/";
+$barra = "%2F";
+@c = ($buffer =~ /$barra/g);
+$i = scalar @c; 
+
+while($i > 0){
+  $ind = index $buffer, "%2F";
+  if($ind != -1){
+    substr $buffer, $ind, 3, "/";
+  }
+  $i--;
 }
 
 system("Bash/Bash $buffer");
