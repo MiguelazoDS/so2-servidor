@@ -18,6 +18,11 @@ if($ind != -1){
   substr $buffer, $ind, 1, " ";
 }
 
+$ind = index $buffer, "%2F";
+if($ind != -1){
+  substr $buffer, $ind, 3, "/";
+}
+
 system("Bash/Bash $buffer");
 
 sub get_info{
