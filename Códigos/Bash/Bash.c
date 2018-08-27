@@ -54,7 +54,7 @@ int lsh_cd(char **args){
      perror("lsh");
    }
   }
-  return 1;
+  return 0;
 }
 
  /**
@@ -63,17 +63,23 @@ int lsh_cd(char **args){
     @return Always returns 1, to continue executing.
   */
 int lsh_help(char **args){
+  /*Guarda el texto en el archivo output.*/
   int i;
-  printf("Stephen Brennan's LSH\n");
-  printf("Type program names and arguments, and hit enter.\n");
-  printf("The following are built in:\n");
+  FILE *file;
+  file=fopen("output","w");
+
+  fprintf(file, "Stephen Brennan's LSH\n");
+  fprintf(file, "Type program names and arguments, and hit enter.\n");
+  fprintf(file, "The following are built in:\n");
 
   for (i = 0; i < lsh_num_builtins(); i++) {
-   printf("  %s\n", builtin_str[i]);
+   fprintf(file, "  %s\n", builtin_str[i]);
   }
 
-  printf("Use the man command for information on other programs.\n");
-  return 1;
+  fprintf(file, "Use the man command for information on other programs.\n");
+  fclose(file);
+
+  return 0;
 }
 
  /**
@@ -96,7 +102,8 @@ int (*builtin_func[]) (char **) = {
    @return Always returns 1, to continue execution.
   */
 int lsh_launch(char **args){
-  pid_t pid;/*, wpid;*/
+  /*Se implementa un tubería para enviar la salida del comando execvp a un archivo*/
+  pid_t pid;
   int link[2];
 
   if (pipe(link)==-1)
@@ -143,19 +150,25 @@ int lsh_execute(char **args){
   return lsh_launch(args);
 }
 
+/*Guarda en el archivo el contenido de la variable "output" en el archivo*/
+void guardar_archivo(FILE *file){
+  file=fopen("output","w");
+  fprintf(file, "%s\n", output);
+  fclose(file);
+}
+
 int main(int argc, char **argv){
   int status, i;
   FILE *file;
-
+  /*Ejecuta hasta que status no sea 1. Todos los comandos retornan 0. Se ejecuta una vez y sale.*/
   do {
+    /*Guarda en argv todos los argumentos enviados, evitando la ejecución del programa*/
     for(i=0; i<argc; i++){
       argv[i]=argv[i+1];
     }
     status = lsh_execute(argv);
-
-    file=fopen("output","w");
-    fprintf(file, "%s\n", output);
-    fclose(file);
+    /*Llamada a función.*/
+    guardar_archivo(file);
   } while (status);
 
   return EXIT_SUCCESS;
