@@ -14,7 +14,7 @@ print header(-charset=>'utf-8'),
                 -bgcolor=>"lightblue",
                 -align=>"center",
               ),
-#Formulario multipartes (subida de archivos)
+#Formulario multipartes (subida de archivos), utiliza por defecto el método POST
      start_multipart_form,
      'Archivo .ko: ',p ,filefield('input_file'), p,
      submit(-name=>'Subir'),

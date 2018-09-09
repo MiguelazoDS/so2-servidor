@@ -21,97 +21,20 @@
 char output[BUFFSIZE];
 int nbytes;
 
-/**
-   @brief Main entry point.
-   @param argc Argument count.
-   @param argv Argument vector.
-   @return status code
- */
-
- /*
-   List of builtin commands, followed by their corresponding functions.
-  */
-char *builtin_str[] = {
-  "cd",
-  "help",
-  "exit"
-};
-
-int lsh_num_builtins() {
-  return sizeof(builtin_str) / sizeof(char *);
-}
-
- /**
-    @brief Bultin command: change directory.
-    @param args List of args.  args[0] is "cd".  args[1] is the directory.
-    @return Always returns 1, to continue executing.
-  */
-int lsh_cd(char **args){
-  if (args[1] == NULL) {
-   fprintf(stderr, "lsh: expected argument to \"cd\"\n");
-  } else {
-   if (chdir(args[1]) != 0) {
-     perror("lsh");
-   }
-  }
-  return 0;
-}
-
- /**
-    @brief Builtin command: print help.
-    @param args List of args.  Not examined.
-    @return Always returns 1, to continue executing.
-  */
-int lsh_help(char **args){
-  /*Guarda el texto en el archivo output.*/
-  int i;
-  FILE *file;
-  file=fopen("output","w");
-
-  fprintf(file, "Stephen Brennan's LSH\n");
-  fprintf(file, "Type program names and arguments, and hit enter.\n");
-  fprintf(file, "The following are built in:\n");
-
-  for (i = 0; i < lsh_num_builtins(); i++) {
-   fprintf(file, "  %s\n", builtin_str[i]);
-  }
-
-  fprintf(file, "Use the man command for information on other programs.\n");
-  fclose(file);
-
-  return 0;
-}
-
- /**
-    @brief Builtin command: exit.
-    @param args List of args.  Not examined.
-    @return Always returns 0, to terminate execution.
-  */
-int lsh_exit(char **args){
-   return 0;
-}
-
-int (*builtin_func[]) (char **) = {
-  &lsh_cd,
-  &lsh_help,
-  &lsh_exit
-};
- /**
-   @brief Launch a program and wait for it to terminate.
-   @param args Null terminated list of arguments (including program).
-   @return Always returns 1, to continue execution.
-  */
 int lsh_launch(char **args){
   /*Se implementa un tubería para enviar la salida del comando execvp a un archivo*/
   pid_t pid;
   int link[2];
 
+  /*Error*/
   if (pipe(link)==-1)
    die("pipe");
 
+  /*Error*/
   if ((pid = fork()) == -1)
    die("fork");
 
+  /*La salida de execvp la conecta al pipe.*/
   if (pid == 0) {
    dup2(link[1],STDOUT_FILENO);
    close(link[0]);
@@ -119,6 +42,7 @@ int lsh_launch(char **args){
    execvp(args[0], args);
    die("execl");
   }
+  /*De la otra punta del pipe lee y guarda en un archivo.*/
   else {
    close(link[1]);
    nbytes=read(link[0],output, sizeof(output));
@@ -128,29 +52,18 @@ int lsh_launch(char **args){
   return 0;
 }
 
- /**
-    @brief Execute shell built-in or launch program.
-    @param args Null terminated list of arguments.
-    @return 1 if the shell should continue running, 0 if it should terminate
-  */
 int lsh_execute(char **args){
   int i;
 
   if (args[0] == NULL) {
-   /* An empty command was entered.*/
+   /* Se ingresó un comando vacío.*/
    return 0;
-  }
-
-  for (i = 0; i < lsh_num_builtins(); i++) {
-   if (strcmp(args[0], builtin_str[i]) == 0) {
-     return (*builtin_func[i])(args);
-   }
   }
 
   return lsh_launch(args);
 }
 
-/*Guarda en el archivo el contenido de la variable "output" en el archivo*/
+/*Guarda en el archivo "output" el contenido de la variable "output".*/
 void guardar_archivo(FILE *file){
   file=fopen("output","w");
   fprintf(file, "%s\n", output);

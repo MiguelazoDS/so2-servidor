@@ -8,7 +8,7 @@ print 	$q->header( -charset=>'utf-8'),
                         -style=>{-src=>'style.css'}),
      	  $q->end_html;
 
-
+#Función que abre e imprime lo que contiene un archivo del "proc".
 sub get_info{
 	@h= split "\n", `cat /proc/$_[0]`;
 	foreach $a(@h){
@@ -16,6 +16,8 @@ sub get_info{
        	$q->end_html;
 	}
 }
+
+#Archivos del "proc".
 $mem="meminfo";
 $cpu="cpuinfo";
 $time="uptime";
