@@ -8,6 +8,32 @@ print 	$q->header( -charset=>'utf-8'),
                         -style=>{-src=>'style.css'}),
      	  $q->end_html;
 
+#Directorio donde está el script bash.pl y donde se guardará el archivo pwd.
+$base=getcwd."/";
+
+#Guardo el directorio donde está el ejecutable bash.
+$bash=$base."Bash/Bash";
+
+#Nombre del archivo.
+$pwd = "pwd";
+
+#Path donde guardo el archivo pwd.
+$pwd_path = $base.$pwd;
+
+#Verifico si existe el archivo.
+if(-e $pwd){
+  #Existe guardo lo del archivo en una variable.
+  $pwd_c = `cat pwd`;
+  #Cambio el directorio actual con lo que se leyó del archivo.
+  chdir($pwd_c);
+}
+else{
+  #No existe. Guardo en un archivo el directorio actual
+  open($file, ">", "pwd");
+  print $file getcwd;
+  close($file);
+}
+
 #Obtiene el comando ingresado por el cuadro de diálogo.
 $buffer = $ENV{'QUERY_STRING'};
 if($buffer =~ /\w=(.+)/){
@@ -43,8 +69,30 @@ while($i > 0){
   $i--;
 }
 
-#Ejecuta el bash con el comando obtenido.
-system("Bash/Bash $buffer");
+#Separo la cadena por espacios y utilizo el primer valor.
+@comando=split " ", $buffer;
+print "comando: ", $comando[0],"\n";
+print "directorio: ", $comando[1],"\n";
+
+#Si el comando es "cd", y no da error, guardo el cambio de directorio en el archivo.
+if($comando[0] eq "cd"){
+  $correcto = chdir($comando[1]);
+  if($correcto == 1){
+    print "El directorio actual es: ", getcwd;
+    open($file, ">", "$pwd_path");
+    print $file getcwd;
+    close($file);
+  }
+  #Si da error
+  else{
+    print "El directorio no existe\n";
+    print $comando[0];
+  }
+}
+#Si es otro comando llamo a bash
+else{
+  system("Bash/Bash $buffer");
+}
 
 #Función que abre y lee un archivo.
 sub get_info{
@@ -59,3 +107,6 @@ sub get_info{
 $out="output";
 print $q->h3("SALIDA BASH");
 get_info($out);
+
+#Borro el archivo.
+unlink("output");
