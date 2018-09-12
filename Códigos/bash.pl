@@ -91,7 +91,7 @@ if($comando[0] eq "cd"){
 }
 #Si es otro comando llamo a bash
 else{
-  system("Bash/Bash $buffer");
+  system("$bash $buffer");
 }
 
 #Función que abre y lee un archivo.
