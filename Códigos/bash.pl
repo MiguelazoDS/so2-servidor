@@ -86,6 +86,7 @@ if($comando[0] eq "cd"){
     open($file, ">", "output");
     print $file "El directorio no existe";
     close($file);
+  }
 }
 #Si es otro comando llamo a bash
 else{
