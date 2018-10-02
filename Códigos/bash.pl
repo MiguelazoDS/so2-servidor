@@ -76,7 +76,6 @@ while($i > 0){
 if($comando[0] eq "cd"){
   $correcto = chdir($comando[1]);
   if($correcto == 1){
-    print "El directorio actual es: ", getcwd;
     open($file, ">", "$pwd_path");
     print $file getcwd;
     close($file);
