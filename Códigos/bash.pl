@@ -69,10 +69,8 @@ while($i > 0){
   $i--;
 }
 
-#Separo la cadena por espacios y utilizo el primer valor.
+#Separo la cadena por espacios y utilizo el primer valor (comando).
 @comando=split " ", $buffer;
-print "comando: ", $comando[0],"\n";
-print "directorio: ", $comando[1],"\n";
 
 #Si el comando es "cd", y no da error, guardo el cambio de directorio en el archivo.
 if($comando[0] eq "cd"){
@@ -83,11 +81,11 @@ if($comando[0] eq "cd"){
     print $file getcwd;
     close($file);
   }
-  #Si da error
+  #Si da error guarda el mensaje en un archivo de nombre "output"
   else{
-    print "El directorio no existe\n";
-    print $comando[0];
-  }
+    open($file, ">", "output");
+    print $file "El directorio no existe";
+    close($file);
 }
 #Si es otro comando llamo a bash
 else{
