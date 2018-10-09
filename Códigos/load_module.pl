@@ -9,7 +9,7 @@ print 	$q->header( -charset=>'utf-8'),
      	  $q->end_html;
 
 #Instala el módulo.
-$instalar=system("sudo /usr/bin/insmod /tmp/hello_world.ko");
+$instalar=system("sudo /sbin/insmod /tmp/hello_world.ko");
 #Guarda la última línea de dmesg.
 $info=`dmesg | tail -n 1`;
 #Si se pudo instalar envía el mensaje.

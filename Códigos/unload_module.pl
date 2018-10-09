@@ -9,7 +9,7 @@ print 	$q->header( -charset=>'utf-8'),
      	  $q->end_html;
 
 #Remueve el módulo.
-$desinstalar=system("sudo /usr/bin/rmmod hello_world");
+$desinstalar=system("sudo /sbin/rmmod hello_world");
 #Guarda la última línea de dmesg.
 $info=`dmesg | tail -n 1`;
 #Si se pudo remover envía el mensaje.
